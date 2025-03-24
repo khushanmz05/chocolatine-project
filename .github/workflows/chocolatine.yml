@@ -1,0 +1,90 @@
+name: Chocolatine Workflow
+
+on:
+  push:
+    branches:
+      - "**"
+  pull_request:
+    branches:
+      - "**"
+
+env:
+    MIRROR_URL: 
+        git@github.com:EpitechPGEPromo2029/B-DOP-200-BAR-2-1-chocolatine-khushan-hitesh.kanakrai.git
+    EXECUTABLE: 
+        "directory1/executableA,directory2/executableB"
+jobs:
+  check-conditions:
+    runs-on: ubuntu-latest
+    outputs:    
+      should_run: ${{ steps.check.outputs.should_run }}
+    steps:
+      - name: Check if branch should be ignored
+        id: check
+        run: |
+          if [[ "${{ github.ref }}" == refs/heads/ga-ignore-* ]]; then
+            echo "Branch is ignored. Skipping workflow."
+            echo "should_run=false" >> $GITHUB_ENV
+          elif [[ "${{ github.repository }}" == "${{ secrets.MIRROR_REPO }}" ]]; then
+            echo "This is the mirror repository. Skipping workflow."
+            echo "should_run=false" >> $GITHUB_ENV
+          else
+            echo "Workflow will proceed."
+            echo "should_run=true" >> $GITHUB_ENV
+          fi
+
+  mirror-repo:
+    runs-on: ubuntu-latest
+    needs: check-conditions
+    if: needs.check-conditions.outputs.should_run == 'true'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Mirror repository
+        uses: pixta-dev/repository-mirroring-action@v1
+        with:
+          target_repo_url:
+            git@github.com:EpitechPGEPromo2029/B-DOP-200-BAR-2-1-chocolatine-khushan-hitesh.kanakrai.git
+          ssh_private_key: ${{ secrets.GIT_SSH_PRIVATE_KEY }}
+
+  check-executables:
+      runs-on: ubuntu-latest
+      needs: mirror-repo
+      steps:
+        - name: Checkout repository
+          uses: actions/checkout@v4
+  
+        - name: Verify Executables
+          run: |
+            IFS=',' read -ra EXE_LIST <<< "${{ env.EXECUTABLE }}"
+            for exe in "${EXE_LIST[@]}"; do
+              if [[ ! -x "$exe" ]]; then
+                echo "Error: Expected executable '$exe' not found or not executable."
+                exit 1
+              fi
+            done
+            echo "All expected executables are present."
+
+  check_coding_style:
+    runs-on: ubuntu-latest
+    needs: check-executables
+    steps:
+        - name: Checkout repository
+          uses: actions/checkout@v4
+
+        - name: Run coding style checker
+          uses: docker://ghcr.io/epitechcontent/epitest-docker:latest
+          with:
+            entrypoint: "check.sh"
+            args: "$(pwd) $(pwd)"
+
+        - name: Display coding style errors
+          if: failure()
+          run: |
+            echo "Coding style errors detected."
+            coding-style-reports.log
+        
+        - name: Fail the job on coding style errors
+          if: failure()
+          run: exit 1
