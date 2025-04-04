@@ -10,7 +10,7 @@ on:
 
 env:
     MIRROR_URL: 
-         EpitechPGEPromo2029/B-DOP-200-BAR-2-1-chocolatine-khushan-hitesh.kanakrai.git
+         git@github.com:EpitechPGEPromo2029/B-DOP-200-BAR-2-1-chocolatine-khushan-hitesh.kanakrai.git
     EXECUTABLE: 
         "directory1/executableA,directory2/executableB"
 
