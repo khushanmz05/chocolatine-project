@@ -9,10 +9,8 @@ on:
       - "**"
 
 env:
-    MIRROR_URL: 
-         git@github.com:EpitechPGEPromo2029/B-DOP-200-BAR-2-1-chocolatine-khushan-hitesh.kanakrai.git
-    EXECUTABLE: 
-        "directory1/executableA,directory2/executableB"
+  MIRROR_URL: git@github.com:EpitechPGEPromo2029/B-DOP-200-BAR-2-1-chocolatine-khushan-hitesh.kanakrai.git
+  EXECUTABLE: "directory1/executableA,directory2/executableB"
 
 jobs:
   check-conditions:
@@ -77,14 +75,14 @@ jobs:
         uses: docker://ghcr.io/epitechcontent/epitest-docker:latest
         with:
           entrypoint: "check.sh"
-          args: "$(pwd) $(pwd)"
+          args: "$(pwd)"
 
       - name: Display coding style errors
         if: failure()
         run: |
           echo "Coding style errors detected."
-          coding-style-reports.log
-        
+          cat coding-style-reports.log
+
       - name: Fail the job on coding style errors
         if: failure()
         run: exit 1
