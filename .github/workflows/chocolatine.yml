@@ -32,7 +32,7 @@ jobs:
           else
             echo "Workflow will proceed."
             echo "should_run=true" >> $GITHUB_OUTPUT
-            fi
+          fi
 
   mirror-repo:
     runs-on: ubuntu-latest
