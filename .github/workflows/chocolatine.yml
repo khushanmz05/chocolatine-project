@@ -9,8 +9,10 @@ on:
       - "**"
 
 env:
-  MIRROR_URL: git@github.com:EpitechPGEPromo2029/B-DOP-200-BAR-2-1-chocolatine-khushan-hitesh.kanakrai.git
-  EXECUTABLE: "directory1/executableA,directory2/executableB"
+    MIRROR_URL: 
+        git@github.com:EpitechPGEPromo2029/B-DOP-200-BAR-2-1-chocolatine-khushan-hitesh.kanakrai.git
+    EXECUTABLE: 
+        "directory1/executableA,directory2/executableB"
 
 jobs:
   check-conditions:
@@ -21,15 +23,15 @@ jobs:
       - name: Check if branch should be ignored
         id: check
         run: |
-          if [[ "${{ github.ref }}" == refs/heads/ga-ignore-* ]]; then
+          if [[ "${GITHUB_REF}" == refs/heads/ga-ignore-* ]]; then
             echo "Branch is ignored. Skipping workflow."
-            echo "::set-output name=should_run::false"
-          elif [[ "${{ github.repository }}" == "${{ secrets.MIRROR_REPO }}" ]]; then
+            echo "should_run=false" >> $GITHUB_OUTPUT
+          elif [[ "${GITHUB_REPOSITORY}" == "${{ secrets.MIRROR_REPO }}" ]]; then
             echo "This is the mirror repository. Skipping workflow."
-            echo "::set-output name=should_run::false"
+            echo "should_run=false" >> $GITHUB_OUTPUT
           else
             echo "Workflow will proceed."
-            echo "::set-output name=should_run::true"
+            echo "should_run=true" >> $GITHUB_OUTPUT
 
   mirror-repo:
     runs-on: ubuntu-latest
@@ -41,8 +43,8 @@ jobs:
 
       - name: Mirror repository
         uses: pixta-dev/repository-mirroring-action@v1
-        with:
-          target_repo_url: ${{ env.MIRROR_URL }}
+        with: 
+          target_repo_url: git@github.com:EpitechPGEPromo2029/B-DOP-200-BAR-2-1-chocolatine-khushan-hitesh.kanakrai.git
           ssh_private_key: ${{ secrets.GIT_SSH_PRIVATE_KEY }}
 
   check-executables:
@@ -51,7 +53,7 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
+  
       - name: Verify Executables
         run: |
           IFS=',' read -ra EXE_LIST <<< "${{ env.EXECUTABLE }}"
@@ -80,8 +82,8 @@ jobs:
         if: failure()
         run: |
           echo "Coding style errors detected."
-          cat coding-style-reports.log || true
-
+          coding-style-reports.log
+        
       - name: Fail the job on coding style errors
         if: failure()
         run: exit 1
