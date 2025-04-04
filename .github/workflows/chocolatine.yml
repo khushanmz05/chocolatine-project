@@ -9,14 +9,13 @@ on:
       - "**"
 
 env:
-    MIRROR_URL: 
-        git@github.com:EpitechPGEPromo2029/B-DOP-200-BAR-2-1-chocolatine-khushan-hitesh.kanakrai.git
-    EXECUTABLE: 
-        "directory1/executableA,directory2/executableB"
+  MIRROR_URL: git@github.com:EpitechPGEPromo2029/B-DOP-200-BAR-2-1-chocolatine-khushan-hitesh.kanakrai.git
+  EXECUTABLE: "directory1/executableA,directory2/executableB"
+
 jobs:
   check-conditions:
     runs-on: ubuntu-latest
-    outputs:    
+    outputs:
       should_run: ${{ steps.check.outputs.should_run }}
     steps:
       - name: Check if branch should be ignored
@@ -24,14 +23,13 @@ jobs:
         run: |
           if [[ "${{ github.ref }}" == refs/heads/ga-ignore-* ]]; then
             echo "Branch is ignored. Skipping workflow."
-            echo "should_run=false" >> $GITHUB_ENV
+            echo "::set-output name=should_run::false"
           elif [[ "${{ github.repository }}" == "${{ secrets.MIRROR_REPO }}" ]]; then
             echo "This is the mirror repository. Skipping workflow."
-            echo "should_run=false" >> $GITHUB_ENV
+            echo "::set-output name=should_run::false"
           else
             echo "Workflow will proceed."
-            echo "should_run=true" >> $GITHUB_ENV
-          fi
+            echo "::set-output name=should_run::true"
 
   mirror-repo:
     runs-on: ubuntu-latest
@@ -44,47 +42,46 @@ jobs:
       - name: Mirror repository
         uses: pixta-dev/repository-mirroring-action@v1
         with:
-          target_repo_url:
-            git@github.com:EpitechPGEPromo2029/B-DOP-200-BAR-2-1-chocolatine-khushan-hitesh.kanakrai.git
+          target_repo_url: ${{ env.MIRROR_URL }}
           ssh_private_key: ${{ secrets.GIT_SSH_PRIVATE_KEY }}
 
   check-executables:
-      runs-on: ubuntu-latest
-      needs: mirror-repo
-      steps:
-        - name: Checkout repository
-          uses: actions/checkout@v4
-  
-        - name: Verify Executables
-          run: |
-            IFS=',' read -ra EXE_LIST <<< "${{ env.EXECUTABLE }}"
-            for exe in "${EXE_LIST[@]}"; do
-              if [[ ! -x "$exe" ]]; then
-                echo "Error: Expected executable '$exe' not found or not executable."
-                exit 1
-              fi
-            done
-            echo "All expected executables are present."
+    runs-on: ubuntu-latest
+    needs: mirror-repo
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify Executables
+        run: |
+          IFS=',' read -ra EXE_LIST <<< "${{ env.EXECUTABLE }}"
+          for exe in "${EXE_LIST[@]}"; do
+            if [[ ! -x "$exe" ]]; then
+              echo "Error: Expected executable '$exe' not found or not executable."
+              exit 1
+            fi
+          done
+          echo "All expected executables are present."
 
   check_coding_style:
     runs-on: ubuntu-latest
     needs: check-executables
     steps:
-        - name: Checkout repository
-          uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-        - name: Run coding style checker
-          uses: docker://ghcr.io/epitechcontent/epitest-docker:latest
-          with:
-            entrypoint: "check.sh"
-            args: "$(pwd) $(pwd)"
+      - name: Run coding style checker
+        uses: docker://ghcr.io/epitechcontent/epitest-docker:latest
+        with:
+          entrypoint: "check.sh"
+          args: "$(pwd) $(pwd)"
 
-        - name: Display coding style errors
-          if: failure()
-          run: |
-            echo "Coding style errors detected."
-            coding-style-reports.log
-        
-        - name: Fail the job on coding style errors
-          if: failure()
-          run: exit 1
+      - name: Display coding style errors
+        if: failure()
+        run: |
+          echo "Coding style errors detected."
+          cat coding-style-reports.log || true
+
+      - name: Fail the job on coding style errors
+        if: failure()
+        run: exit 1
