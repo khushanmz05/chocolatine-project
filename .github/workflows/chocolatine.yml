@@ -10,7 +10,6 @@ on:
 
 env:
   MIRROR_URL: git@github.com:EpitechPGEPromo2029/B-DOP-200-BAR-2-1-chocolatine-khushan-hitesh.kanakrai.git
-  EXECUTABLE: "calculator"
 
 jobs:
   check-conditions:
