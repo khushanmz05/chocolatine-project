@@ -43,7 +43,7 @@ jobs:
       - name: Mirror repository
         uses: pixta-dev/repository-mirroring-action@v1
         with: 
-          target_repo_url: git@github.com:khushanmz05/chocolatine-project.git
+          target_repo_url: git@github.com:EpitechPGEPromo2029/B-DOP-200-BAR-2-1-chocolatine-khushan-hitesh.kanakrai.git
           ssh_private_key: ${{ secrets.GIT_SSH_PRIVATE_KEY }}
 
   check-executables:
