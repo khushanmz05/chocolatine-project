@@ -17,7 +17,8 @@ char *read_input(void)
     
     while (read(0, buf, 1) > 0 && buf[0] != '\n') {
         new_input = malloc(size + 2);
-        if (!new_input) return NULL;
+        if (!new_input) 
+        return NULL;
         for (int j = 0; j < size; j++)
             new_input[j] = input ? input[j] : 0;
         new_input[size] = buf[0];
