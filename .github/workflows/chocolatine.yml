@@ -68,25 +68,36 @@ jobs:
   check_coding_style:
     runs-on: ubuntu-latest
     needs: check-executables
+    container:
+      image: ghcr.io/epitech/coding-style-checker:latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Log in to Github Container Registry
-        run: echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-        
       - name: Run coding style checker
-        uses: docker://ghcr.io/epitechcontent/epitest-docker:latest
-        with:
-          entrypoint: "check.sh"
-          args: "$(pwd)"
+        run: check.sh $(pwd) $(pwd)
 
-      - name: Display coding style errors
-        if: failure()
+      - name: Annotate coding style errors
+        if: always() # Run even if the previous step failed
         run: |
-          echo "Coding style errors detected."
-          cat coding-style-reports.log
+          if [ -f coding-style-reports.log ]; then
+            while IFS= read -r line; do
+              file=$(echo "$line" | cut -d':' -f1)
+              line_num=$(echo "$line" | cut -d':' -f2)
+              error_type=$(echo "$line" | cut -d':' -f3)
+              message=$(echo "$line" | cut -d':' -f4-)
 
-      - name: Fail the job on coding style errors
-        if: failure()
-        run: exit 1
+              # Output GitHub annotation format
+              echo "::error file=$file,line=$line_num,title=Coding Style Error::$error_type: $message"
+            done < coding-style-reports.log
+          fi
+
+      - name: Fail on coding style errors
+        if: always()
+        run: |
+          if [ -s coding-style-reports.log ]; then
+            echo "Coding style errors detected."
+            exit 1
+          fi
+
