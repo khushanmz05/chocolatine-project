@@ -44,6 +44,11 @@ jobs:
         with: 
           target_repo_url: git@github.com:EpitechPGEPromo2029/B-DOP-200-BAR-2-1-chocolatine-khushan-hitesh.kanakrai.git
           ssh_private_key: ${{ secrets.GIT_SSH_PRIVATE_KEY }}
+      - name: Debug Information
+        run: |
+            git remote -v
+            git fetch --all
+            git push --force
 
   check-executables:
     runs-on: ubuntu-latest
